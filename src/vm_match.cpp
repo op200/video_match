@@ -17,10 +17,11 @@ extern "C" {
 #include "vm_option.hpp"
 
 namespace vm_match {
+
 class AV_map : public std::map<fnum, AVFrame *> {
-public:
   using std::map<fnum, AVFrame *>::map;
 
+public:
   void clear() {
     for (std::pair<const fnum, AVFrame *> &pair : *this)
       av_frame_free(&pair.second);
@@ -56,9 +57,9 @@ AVFrame *_auto_pix_fmt_process(AVFrame *&frame) {
   new_frame->format = AV_PIX_FMT_GRAY8;
 
   // 为输出帧分配缓冲区
-  if (av_image_alloc(new_frame->data, new_frame->linesize,
-                     vm_option::new_width, vm_option::new_height,
-                     AVPixelFormat::AV_PIX_FMT_GRAY8, 32) < 0) {
+  if (av_image_alloc(new_frame->data, new_frame->linesize, vm_option::new_width,
+                     vm_option::new_height, AVPixelFormat::AV_PIX_FMT_GRAY8,
+                     32) < 0) {
     av_frame_free(&new_frame);
     vm_log::errore("vm_match::_auto_pix_fmt_process: av_image_alloc: error");
   }
@@ -117,8 +118,7 @@ int8_t _read_frame_2(fnum frame_num) {
 
   if (!isread) {
     frame_buffer_map.erase(frame_num);
-    vm_log::error(
-        "vm_match::_read_frame_2: Failed to read frame in video 2");
+    vm_log::error("vm_match::_read_frame_2: Failed to read frame in video 2");
     return 1;
   }
 
@@ -129,9 +129,9 @@ void _flush_buffer() {
   if (can_not_flush_buffer)
     return;
   // 读取新一段buffer
-  if (video_frame_num_1 + vm_option::frame_forward >= buffer_read_pos) {
+  if (video_frame_num_1 + vm_option::param::frame_forward >= buffer_read_pos) {
     for (fnum i = buffer_read_pos;
-         i < buffer_read_pos + vm_option::frame_forward &&
+         i < buffer_read_pos + vm_option::param::frame_forward &&
          i < vm_option::frame_count_2;
          ++i) {
       switch (_read_frame_2(i)) {
@@ -145,7 +145,7 @@ void _flush_buffer() {
       }
     }
 
-    buffer_read_pos += vm_option::frame_forward;
+    buffer_read_pos += vm_option::param::frame_forward;
   }
 
   // 移除超出的旧帧
@@ -153,7 +153,7 @@ void _flush_buffer() {
     if (it->first <
         std::min(vm_option::frame_count_2,
                  video_frame_num_1 -
-                     static_cast<fnum>(vm_option::frame_forward)))
+                     static_cast<fnum>(vm_option::param::frame_forward)))
       frame_buffer_map.erase(it);
     else
       break;
@@ -169,9 +169,8 @@ void init_ssim_filter_graph() {
   AVFilterContext *buffersrc_ctx_main = nullptr;
   char args_main[512];
   snprintf(args_main, sizeof(args_main),
-           "video_size=%dx%d:pix_fmt=%d:time_base=%d/%d",
-           vm_option::new_width, vm_option::new_height, AV_PIX_FMT_GRAY8,
-           1, 24);
+           "video_size=%dx%d:pix_fmt=%d:time_base=%d/%d", vm_option::new_width,
+           vm_option::new_height, AV_PIX_FMT_GRAY8, 1, 24);
   const AVFilter *buffersrc = avfilter_get_by_name("buffer");
   if (avfilter_graph_create_filter(&buffersrc_ctx_main, buffersrc, "src_main",
                                    args_main, nullptr, ssim_graph) < 0)
@@ -181,9 +180,8 @@ void init_ssim_filter_graph() {
   AVFilterContext *buffersrc_ctx_ref = nullptr;
   char args_ref[512];
   snprintf(args_ref, sizeof(args_ref),
-           "video_size=%dx%d:pix_fmt=%d:time_base=%d/%d",
-           vm_option::new_width, vm_option::new_height, AV_PIX_FMT_GRAY8,
-           1, 24);
+           "video_size=%dx%d:pix_fmt=%d:time_base=%d/%d", vm_option::new_width,
+           vm_option::new_height, AV_PIX_FMT_GRAY8, 1, 24);
   if (avfilter_graph_create_filter(&buffersrc_ctx_ref, buffersrc, "src_ref",
                                    args_ref, nullptr, ssim_graph) < 0)
     vm_log::errore("Failed to create buffer source for reference");
@@ -263,14 +261,15 @@ double compare_ssim(AVFrame *frame_1, AVFrame *frame_2) {
   av_freep(&frame_2->data[0]);
   av_frame_free(&frame_2);
 
-  if (vm_option::debug)
+  if (vm_option::param::debug)
     vm_log::info(std::format("{0} SSIM: {1}", video_frame_num_1, ssim_value));
 
   return ssim_value;
 }
 
 bool frame_cmp(AVFrame *&frame_1, AVFrame *&frame_2) {
-  bool is_pass = compare_ssim(frame_1, frame_2) >= vm_option::ssim_threshold;
+  bool is_pass =
+      compare_ssim(frame_1, frame_2) >= vm_option::param::ssim_threshold;
   if (is_pass) {
     av_freep(&frame_1->data[0]);
     av_frame_free(&frame_1);
@@ -304,8 +303,7 @@ void do_match() {
   while (av_read_frame(vm_option::formatContext_1, &packet_1) >= 0) {
     if (packet_1.stream_index == vm_option::video_stream_index_1) {
       if (avcodec_send_packet(vm_option::codecContext_1, &packet_1) == 0) {
-        while (avcodec_receive_frame(vm_option::codecContext_1, frame_1) ==
-               0) {
+        while (avcodec_receive_frame(vm_option::codecContext_1, frame_1) == 0) {
           // 执行
 
           // vm_log::info(std::format("{0}",video_frame_num_1));
@@ -368,4 +366,5 @@ void do_match() {
   avcodec_free_context(&vm_option::codecContext_1);
   avcodec_free_context(&vm_option::codecContext_2);
 }
+
 } // namespace vm_match

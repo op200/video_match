@@ -9,13 +9,18 @@
 #include "vm_version.hpp"
 
 namespace vm_option {
+
+namespace param {
+
 std::string input_video_path_1, input_video_path_2, log_path;
 output_type_enum output_type = output_type_enum::framenum;
-uint16_t frame_scale = 1;
+double frame_scale = 1;
 double ssim_threshold = 0.992;
 int16_t frame_forward = 24;
 bool benchmark = false, debug = false;
 std::string hwaccel("");
+
+} // namespace param
 
 int8_t video_stream_index_1 = -1, video_stream_index_2 = -1;
 AVFormatContext *formatContext_1 = nullptr, *formatContext_2 = nullptr;
@@ -25,7 +30,7 @@ fnum frame_count_1, frame_count_2;
 uint32_t new_width, new_height;
 
 std::string _get_output_type_string() {
-  switch (output_type) {
+  switch (param::output_type) {
   case output_type_enum::nooutput:
     return "nooutput";
   case output_type_enum::framenum:
@@ -79,7 +84,7 @@ Filter options:
         Default: {3}
 
 Accuracy options:
-    -scale <int 1..65535>
+    -scale <float>
         Scaling images for comparison
         e.g. -scale 2 == 0.5x
         Default: {4}
@@ -100,8 +105,9 @@ Debug options:
         Output debug messages on the command line
         Will not be terminated when certain errors occurs
 )",
-          version_info, _get_output_type_string(), log_path, ssim_threshold,
-          frame_scale, frame_forward));
+          version_info, _get_output_type_string(), param::log_path,
+          param::ssim_threshold, param::frame_scale, param::frame_forward));
+
       std::exit(EXIT_SUCCESS);
     }
   }
@@ -109,60 +115,62 @@ Debug options:
   args.push_back("");
   for (int i = 0; i < args.size(); ++i) {
     if (args[i] == "-i1" || args[i] == "-input1")
-      input_video_path_1 = args[i + 1];
+      param::input_video_path_1 = args[i + 1];
     if (args[i] == "-i2" || args[i] == "-input2")
-      input_video_path_2 = args[i + 1];
+      param::input_video_path_2 = args[i + 1];
     if (args[i] == "-t" || args[i] == "-type") {
       if (args[i + 1] == "nooutput")
-        output_type = output_type_enum::nooutput;
+        param::output_type = output_type_enum::nooutput;
       if (args[i + 1] == "framenum")
-        output_type = output_type_enum::framenum;
+        param::output_type = output_type_enum::framenum;
     }
     if (args[i] == "-log")
-      log_path = args[i + 1];
+      param::log_path = args[i + 1];
     if (args[i] == "-th" || args[i] == "-threshold")
-      ssim_threshold = std::stod(args[i + 1]);
+      param::ssim_threshold = std::stod(args[i + 1]);
     if (args[i] == "-scale")
-      frame_scale = std::stoi(args[i + 1]);
+      param::frame_scale = std::stod(args[i + 1]);
     if (args[i] == "-forward")
-      frame_forward = std::stoi(args[i + 1]);
+      param::frame_forward = std::stoi(args[i + 1]);
     if (args[i] == "-benchmark")
-      benchmark = true;
+      param::benchmark = true;
     if (args[i] == "-hw" || args[i] == "-hwaccel")
-      hwaccel = args[i + 1];
+      param::hwaccel = args[i + 1];
     if (args[i] == "-debug")
-      debug = true;
+      param::debug = true;
   }
 
   // 视频校验
-  if (input_video_path_1.empty())
+  if (param::input_video_path_1.empty())
     vm_log::errore("Need input video 1 (-i1)");
-  if (input_video_path_2.empty())
+  if (param::input_video_path_2.empty())
     vm_log::errore("Need input video 2 (-i2)");
 
   // 输入
-  if (auto _res = avformat_open_input(
-          &formatContext_1, input_video_path_1.c_str(), nullptr, nullptr);
+  if (auto _res = avformat_open_input(&formatContext_1,
+                                      param::input_video_path_1.c_str(),
+                                      nullptr, nullptr);
       _res != 0)
-    vm_log::errore("The video 1 \"" + input_video_path_1 +
+    vm_log::errore("The video 1 \"" + param::input_video_path_1 +
                    "\" can not be opened: " + vm_utils::ff_err_to_str(_res));
 
-  if (auto _res = avformat_open_input(
-          &formatContext_2, input_video_path_2.c_str(), nullptr, nullptr);
+  if (auto _res = avformat_open_input(&formatContext_2,
+                                      param::input_video_path_2.c_str(),
+                                      nullptr, nullptr);
       _res != 0)
-    vm_log::errore("The video 2 \"" + input_video_path_2 +
+    vm_log::errore("The video 2 \"" + param::input_video_path_2 +
                    "\" can not be opened: " + vm_utils::ff_err_to_str(_res));
 
   if (avformat_find_stream_info(formatContext_1, nullptr) < 0) {
     avformat_close_input(&formatContext_1);
     vm_log::errore("Unable to find stream information in video 1 \"" +
-                   input_video_path_1 + "\"");
+                   param::input_video_path_1 + "\"");
   }
 
   if (avformat_find_stream_info(formatContext_2, nullptr) < 0) {
     avformat_close_input(&formatContext_2);
     vm_log::errore("Unable to find stream information in video 2 \"" +
-                   input_video_path_2 + "\"");
+                   param::input_video_path_2 + "\"");
   }
 
   // 搜索第一个视频流
@@ -176,7 +184,7 @@ Debug options:
   if (video_stream_index_1 == -1) {
     avformat_close_input(&formatContext_1);
     vm_log::errore("Unable to find any video stream in input file 1 \"" +
-                   input_video_path_1 + "\"");
+                   param::input_video_path_1 + "\"");
   }
   AVStream *videoStream_1 = formatContext_1->streams[video_stream_index_1];
 
@@ -190,7 +198,7 @@ Debug options:
   if (video_stream_index_2 == -1) {
     avformat_close_input(&formatContext_2);
     vm_log::errore("Unable to find any video stream in input file 2 \"" +
-                   input_video_path_2 + "\"");
+                   param::input_video_path_2 + "\"");
   }
   AVStream *videoStream_2 = formatContext_2->streams[video_stream_index_2];
 
@@ -207,42 +215,42 @@ Debug options:
   const AVCodec *codec_1 = avcodec_find_decoder(codecParams_1->codec_id);
   if (!codec_1) {
     avformat_close_input(&formatContext_1);
-    vm_log::errore("Failed to find codec in video 1 \"" + input_video_path_1 +
-                   "\"");
+    vm_log::errore("Failed to find codec in video 1 \"" +
+                   param::input_video_path_1 + "\"");
   }
   codecContext_1 = avcodec_alloc_context3(codec_1);
   if (!codecContext_1) {
     avformat_close_input(&formatContext_1);
     vm_log::errore("Failed to allocate video codec context in video 1 \"" +
-                   input_video_path_1 + "\"");
+                   param::input_video_path_1 + "\"");
   }
   if (avcodec_parameters_to_context(codecContext_1, codecParams_1) < 0) {
     avcodec_free_context(&codecContext_1);
     avformat_close_input(&formatContext_1);
     vm_log::errore(
         "Failed to copy codec parameters to decoder context in video 1 \"" +
-        input_video_path_1 + "\"");
+        param::input_video_path_1 + "\"");
   }
 
   AVCodecParameters *codecParams_2 = videoStream_2->codecpar;
   const AVCodec *codec_2 = avcodec_find_decoder(codecParams_2->codec_id);
   if (!codec_2) {
     avformat_close_input(&formatContext_2);
-    vm_log::errore("Failed to find codec in video 2 \"" + input_video_path_2 +
-                   "\"");
+    vm_log::errore("Failed to find codec in video 2 \"" +
+                   param::input_video_path_2 + "\"");
   }
   codecContext_2 = avcodec_alloc_context3(codec_2);
   if (!codecContext_2) {
     avformat_close_input(&formatContext_2);
     vm_log::errore("Failed to allocate video codec context in video 2 \"" +
-                   input_video_path_2 + "\"");
+                   param::input_video_path_2 + "\"");
   }
   if (avcodec_parameters_to_context(codecContext_2, codecParams_2) < 0) {
     avcodec_free_context(&codecContext_2);
     avformat_close_input(&formatContext_2);
     vm_log::errore(
         "Failed to copy codec parameters to decoder context in video 2 \"" +
-        input_video_path_2 + "\"");
+        param::input_video_path_2 + "\"");
   }
 
   // 设置多线程解码
@@ -258,10 +266,12 @@ Debug options:
   }
 
   // 设置硬件加速
-  if (hwaccel != "") {
-    AVHWDeviceType hw_type = av_hwdevice_find_type_by_name(hwaccel.c_str());
+  if (param::hwaccel != "") {
+    AVHWDeviceType hw_type =
+        av_hwdevice_find_type_by_name(param::hwaccel.c_str());
     if (hw_type == AV_HWDEVICE_TYPE_NONE)
-      vm_log::error(std::format("Unable to find the hwaccel type: {0}", hwaccel));
+      vm_log::error(
+          std::format("Unable to find the hwaccel type: {0}", param::hwaccel));
 
     AVBufferRef *hw_device_ctx = nullptr;
     if ((av_hwdevice_ctx_create(&hw_device_ctx, hw_type, NULL, NULL, 0)) != 0)
@@ -282,27 +292,29 @@ Debug options:
   if (avcodec_open2(codecContext_1, codec_1, nullptr) < 0) {
     avcodec_free_context(&codecContext_1);
     avformat_close_input(&formatContext_1);
-    vm_log::errore("Failed to open codec in video 1 \"" + input_video_path_1 +
-                   "\"");
+    vm_log::errore("Failed to open codec in video 1 \"" +
+                   param::input_video_path_1 + "\"");
   }
 
   // 打开2
   if (avcodec_open2(codecContext_2, codec_2, nullptr) < 0) {
     avcodec_free_context(&codecContext_2);
     avformat_close_input(&formatContext_2);
-    vm_log::errore("Failed to open codec in video 2 \"" + input_video_path_2 +
-                   "\"");
+    vm_log::errore("Failed to open codec in video 2 \"" +
+                   param::input_video_path_2 + "\"");
   }
 
   // 参数校验
-  if (ssim_threshold < 0 || ssim_threshold > 1)
-    vm_log::errore(std::format("-scale {0} out of range", ssim_threshold));
+  if (param::ssim_threshold < 0 || param::ssim_threshold > 1)
+    vm_log::errore(
+        std::format("-scale {} out of range", param::ssim_threshold));
 
-  if (frame_scale == 0)
-    vm_log::errore(std::format("-scale {0} out of range", frame_scale));
+  if (param::frame_scale <= 0)
+    vm_log::errore(std::format("-scale {} out of range", param::frame_scale));
 
-  if (frame_forward <= 0 || frame_forward == 32767)
-    vm_log::errore(std::format("-forward {0} out of range", frame_forward));
+  if (param::frame_forward <= 0 || param::frame_forward == 32767)
+    vm_log::errore(
+        std::format("-forward {} out of range", param::frame_forward));
 
   // 新值
   // 猜测帧数
@@ -331,7 +343,7 @@ Debug options:
         "VFR video exists, frame rate guesses may not be accurate (Incorrect "
         "muxing may cause a program to mistake CFR video for VFR)");
 
-  if (debug)
+  if (param::debug)
     vm_log::info(std::format("The two videos frame counts: Metadata: {0} F & "
                              "{1} F; Guess: {2} F & {3} F",
                              videoStream_1->nb_frames, videoStream_2->nb_frames,
@@ -351,7 +363,7 @@ Debug options:
         std::format("The two videos have different frame counts: {0} F & {1} F",
                     frame_count_1, frame_count_2));
 
-  if (debug)
+  if (param::debug)
     vm_log::info(std::format(
         "The two videos FPS: {0}/{1} FPS & {2}/{3} FPS",
         videoStream_1->avg_frame_rate.num, videoStream_1->avg_frame_rate.den,
@@ -363,17 +375,18 @@ Debug options:
         videoStream_1->avg_frame_rate.num, videoStream_1->avg_frame_rate.den,
         videoStream_2->avg_frame_rate.num, videoStream_2->avg_frame_rate.den));
 
-  new_width =
-      static_cast<uint32_t>(videoStream_1->codecpar->width) / frame_scale;
-  new_height =
-      static_cast<uint32_t>(videoStream_1->codecpar->height) / frame_scale;
+  new_width = static_cast<uint32_t>(videoStream_1->codecpar->width) /
+              param::frame_scale;
+  new_height = static_cast<uint32_t>(videoStream_1->codecpar->height) /
+               param::frame_scale;
 
-  if (debug)
+  if (param::debug)
     vm_log::info(std::format(
         R"("{0}" -i1 "{1}" -i2 "{2}" -t {3} -log {4} -th {5} -scale {6} -forward {7} {8}-hw {9} {10} -c ff)",
-        args[0], input_video_path_1, input_video_path_2,
-        _get_output_type_string(), log_path, ssim_threshold, frame_scale,
-        frame_forward, benchmark ? "-benchmark " : "", hwaccel,
-        debug ? "-debug" : ""));
+        args[0], param::input_video_path_1, param::input_video_path_2,
+        _get_output_type_string(), param::log_path, param::ssim_threshold,
+        param::frame_scale, param::frame_forward,
+        param::benchmark ? "-benchmark " : "", param::hwaccel,
+        param::debug ? "-debug" : ""));
 }
 } // namespace vm_option

@@ -15,24 +15,19 @@ int main(int argc, char *argv[]) {
   SetConsoleOutputCP(CP_UTF8);
 
   // get options
-  std::vector<std::string> args = std::views::counted(argv, argc) |
-                                  std::views::transform([](const char *arg) {
-                                    return vm_utils::ansi_to_utf8(arg);
-                                  }) |
-                                  std::ranges::to<std::vector>();
+  auto args = std::views::counted(argv, argc) |
+              std::views::transform(
+                  [](const char *arg) { return vm_utils::ansi_to_utf8(arg); }) |
+              std::ranges::to<std::vector>();
 
   if (args.size() == 1)
     args.push_back("-h");
-
-  bool *benchmark = nullptr;
-
-  benchmark = &vm_option::benchmark;
 
   vm_option::get_option(args);
 
   // benchmark start
   std::chrono::steady_clock::time_point start_time;
-  if (*benchmark)
+  if (vm_option::param::benchmark)
     start_time = std::chrono::high_resolution_clock::now();
 
   // match
@@ -42,7 +37,7 @@ int main(int argc, char *argv[]) {
   vm_output::vm_output();
 
   // benchmark end
-  if (*benchmark)
+  if (vm_option::param::benchmark)
     vm_log::info(std::format(
         "benchmark {0}",
         std::chrono::duration_cast<std::chrono::milliseconds>(

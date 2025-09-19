@@ -8,6 +8,7 @@
 #include "vm_version.hpp"
 
 namespace vm_log {
+
 void output(const std::string_view &msg) { std::println("{}", msg); }
 
 void change_title(const std::string_view &msg) {
@@ -32,4 +33,5 @@ void warning(const std::string_view &msg) {
 void info(const std::string_view &msg) {
   std::println(stderr, "\033[35m[{} INFO]\033[0m {}", PROGRAM_NAME, msg);
 }
+
 } // namespace vm_log

@@ -15,13 +15,17 @@ namespace vm_option {
 
 enum class output_type_enum { nooutput, framenum };
 
+namespace param {
+
 extern std::string input_video_path_1, input_video_path_2, log_path;
 extern output_type_enum output_type;
-extern uint16_t frame_scale;
+extern double frame_scale;
 extern double ssim_threshold;
 extern int16_t frame_forward;
 extern bool benchmark, debug;
 extern std::string hwaccel;
+
+} // namespace param
 
 extern int8_t video_stream_index_1, video_stream_index_2;
 extern AVFormatContext *formatContext_1, *formatContext_2;
