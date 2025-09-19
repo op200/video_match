@@ -57,7 +57,7 @@ pkg_check_modules(FFmpeg REQUIRED IMPORTED_TARGET
 # 使用更安全的文件收集方式
 set(SOURCES_DIR src)
 file(GLOB SOURCES CONFIGURE_DEPENDS "${SOURCES_DIR}/*.cpp")
-file(GLOB HEADERS CONFIGURE_DEPENDS "${SOURCES_DIR}/*.h")
+file(GLOB HEADERS CONFIGURE_DEPENDS "${SOURCES_DIR}/*.hpp")
 
 # 添加可执行目标
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})

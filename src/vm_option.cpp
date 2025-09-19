@@ -1,12 +1,12 @@
-#include "vm_option.h"
+#include "vm_option.hpp"
 
 #include <cstdlib>
 #include <format>
 #include <vector>
 
-#include "vm_log.h"
-#include "vm_utils.h"
-#include "vm_version.h"
+#include "vm_log.hpp"
+#include "vm_utils.hpp"
+#include "vm_version.hpp"
 
 namespace vm_option {
 std::string input_video_path_1, input_video_path_2, log_path;

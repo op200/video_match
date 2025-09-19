@@ -5,7 +5,7 @@ extern "C" {
 #include <string>
 #include <unordered_map>
 
-#include "vm_utils.h"
+#include "vm_utils.hpp"
 
 namespace vm_utils {
 

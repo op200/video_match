@@ -1,4 +1,4 @@
-#include "vm_match.h"
+#include "vm_match.hpp"
 
 extern "C" {
 #include <libavfilter/avfilter.h>
@@ -13,8 +13,8 @@ extern "C" {
 #include <map>
 #include <thread>
 
-#include "vm_log.h"
-#include "vm_option.h"
+#include "vm_log.hpp"
+#include "vm_option.hpp"
 
 namespace vm_match {
 class AV_map : public std::map<fnum, AVFrame *> {

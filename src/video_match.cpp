@@ -1,8 +1,8 @@
-#include "vm_log.h"
-#include "vm_match.h"
-#include "vm_option.h"
-#include "vm_output.h"
-#include "vm_utils.h"
+#include "vm_log.hpp"
+#include "vm_match.hpp"
+#include "vm_option.hpp"
+#include "vm_output.hpp"
+#include "vm_utils.hpp"
 
 #include <Windows.h>
 #include <chrono>

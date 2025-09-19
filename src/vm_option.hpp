@@ -9,7 +9,7 @@ extern "C" {
 #include <string>
 #include <vector>
 
-#include "vm_type.h"
+#include "vm_type.hpp"
 
 namespace vm_option {
 

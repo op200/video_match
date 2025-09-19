@@ -1,11 +1,11 @@
-#include "vm_log.h"
+#include "vm_log.hpp"
 
 #include <Windows.h>
 #include <cstdlib>
 #include <format>
 #include <print>
 
-#include "vm_version.h"
+#include "vm_version.hpp"
 
 namespace vm_log {
 void output(const std::string_view &msg) { std::println("{}", msg); }

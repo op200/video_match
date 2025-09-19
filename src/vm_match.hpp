@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vm_type.h"
+#include "vm_type.hpp"
 
 namespace vm_match {
 extern fnum *match_frame_list;
