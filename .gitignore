@@ -1,0 +1,10 @@
+/*
+!.gitignore
+!CMakeLists.txt
+!vcpkg.json
+!.clangd
+!.vscode/
+!src/
+!LICENSE
+!README.md
+!.github/

@@ -1,0 +1,15 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "LLDB DAP",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/video_match.exe",
+            // "args": [],
+            // "cwd": "${workspaceFolder}",
+            "preLaunchTask": "build",
+            "console": "integratedTerminal", // ✅ 关键：让程序在外部终端（如 cmd/PowerShell）中运行
+        }
+    ]
+}

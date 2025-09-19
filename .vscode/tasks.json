@@ -1,0 +1,24 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "type": "shell",
+            "command": "cmake",
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": [
+                "$msCompile"
+            ],
+            "detail": "执行 CMake",
+            "presentation": {
+                "reveal": "never", // 关键：不显示终端窗口
+                "panel": "dedicated", // 可选：使用独立的面板（推荐）
+                "clear": true, // 可选：每次运行前清空终端输出
+                "showReuseMessage": false // 可选：不显示“终端可复用”提示
+            }
+        }
+    ]
+}
