@@ -1,6 +1,6 @@
-### Build
+## Build
 
-#### Dependency
+### Dependency
 
 * vcpkg
 * cmake
