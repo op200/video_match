@@ -279,6 +279,10 @@ bool frame_cmp(AVFrame *&frame_1, AVFrame *&frame_2) {
 
 void do_match() {
   match_frame_list = new fnum[vm_option::frame_count_1];
+  auto _write_match_frame_list = [](int offset, int val) {
+    match_frame_list[offset] = val;
+    // vm_log::output(std::format("{}: {}", offset, val), stderr);
+  };
   buffer_read_pos = video_frame_num_1 = 0;
   can_not_flush_buffer = false;
   AVFrame *frame_1 = av_frame_alloc(), *frame_2 = av_frame_alloc();
@@ -317,13 +321,13 @@ void do_match() {
 
             if (frame_cmp(frame_1_resize, frame_2_resize)) {
               frame_buffer_map.erase(p.first);
-              match_frame_list[video_frame_num_1] = p.first;
+              _write_match_frame_list(video_frame_num_1, p.first);
               is_not_finded = false;
               break;
             }
           }
           if (is_not_finded)
-            match_frame_list[video_frame_num_1] = -1;
+            _write_match_frame_list(video_frame_num_1, -1);
 
           ++video_frame_num_1;
         }
@@ -347,13 +351,13 @@ void do_match() {
 
         if (frame_cmp(frame_1_resize, frame_2_resize)) {
           frame_buffer_map.erase(p.first);
-          match_frame_list[video_frame_num_1] = p.first;
+          _write_match_frame_list(video_frame_num_1, p.first);
           is_not_finded = false;
           break;
         }
       }
       if (is_not_finded)
-        match_frame_list[video_frame_num_1] = -1;
+        _write_match_frame_list(video_frame_num_1, -1);
 
       ++video_frame_num_1;
     }

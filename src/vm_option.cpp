@@ -8,6 +8,100 @@
 #include "vm_utils.hpp"
 #include "vm_version.hpp"
 
+namespace compiler_info {
+
+std::string get_build_mode() {
+#ifdef NDEBUG
+  return "Release";
+#else
+  return "Debug";
+#endif
+}
+
+std::string get_compiler_name() {
+  // 先检测 clang-cl (Windows上的clang-cl模式)
+#ifdef __clang__
+#ifdef _MSC_VER
+  // 如果同时定义了 __clang__ 和 _MSC_VER，则是 clang-cl
+  return std::format("Clang-cl (MSVC {})", _MSC_VER);
+#elif defined(_WIN32) || defined(_WIN64)
+  // Windows上的原生clang
+  return "Clang/LLVM (Windows)";
+#else
+  // 其他平台的clang
+  return "Clang/LLVM";
+#endif
+#elif defined(_MSC_VER)
+  // 纯MSVC
+  return "Microsoft Visual C++";
+#elif defined(__GNUC__) && !defined(__clang__)
+  // 纯GCC (不是clang)
+  return "GCC";
+#elif defined(__INTEL_COMPILER)
+  return "Intel C++";
+#elif defined(__MINGW32__)
+  return "MinGW 32-bit (GCC-based)";
+#elif defined(__MINGW64__)
+  return "MinGW 64-bit (GCC-based)";
+#else
+  return "Unknown Compiler";
+#endif
+}
+
+std::string get_compiler_version() {
+#ifdef __clang__
+  return std::to_string(__clang_major__) + "." +
+         std::to_string(__clang_minor__) + "." +
+         std::to_string(__clang_patchlevel__);
+#elif __GNUC__
+  return std::to_string(__GNUC__) + "." + std::to_string(__GNUC_MINOR__) + "." +
+         std::to_string(__GNUC_PATCHLEVEL__);
+#elif _MSC_VER
+  return std::to_string(_MSC_VER);
+#else
+  return "Unknown";
+#endif
+}
+
+std::string get_cpp_standard() {
+#if __cplusplus == 202302L
+  return "C++23";
+#elif __cplusplus == 202002L
+  return "C++20";
+#elif __cplusplus == 201703L
+  return "C++17";
+#elif __cplusplus == 201402L
+  return "C++14";
+#elif __cplusplus == 201103L
+  return "C++11";
+#elif __cplusplus == 199711L
+  return "C++98";
+#else
+  return "Unknown (" + std::to_string(__cplusplus) + ")";
+#endif
+}
+
+std::string get_architecture() {
+#if defined(__x86_64__) || defined(_M_X64)
+  return "x64";
+#elif defined(__i386__) || defined(_M_IX86)
+  return "x86";
+#elif defined(__aarch64__) || defined(_M_ARM64)
+  return "ARM64";
+#elif defined(__arm__) || defined(_M_ARM)
+  return "ARM";
+#else
+  return "Unknown";
+#endif
+}
+
+std::string get_all_info() {
+  return std::format("{} {} {} {} {}", get_compiler_name(),
+                     get_compiler_version(), get_build_mode(),
+                     get_cpp_standard(), get_architecture());
+}
+}; // namespace compiler_info
+
 namespace vm_option {
 
 namespace param {
@@ -40,8 +134,8 @@ std::string _get_output_type_string() {
 
 void get_option(std::vector<std::string> &args) {
   std::string version_info =
-      std::format("{0}\nVersion: {1}\n{2}\nFFmpeg: {3}", PROGRAM_NAME, VERSION,
-                  HOME_LINK, av_version_info());
+      std::format("{} version {}\n{}\n{}\nFFmpeg: {}", PROGRAM_NAME, VERSION,
+                  compiler_info::get_all_info(), HOME_LINK, av_version_info());
   for (std::string arg : args) {
     if (arg == "-v" || arg == "-version") {
       vm_log::output(version_info);

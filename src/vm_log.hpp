@@ -4,7 +4,7 @@
 
 namespace vm_log {
 
-void output(const std::string_view &info);
+void output(const std::string_view &info, FILE *const output = stdout);
 
 void change_title(const std::string_view &info);
 

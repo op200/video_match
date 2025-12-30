@@ -9,7 +9,9 @@
 
 namespace vm_log {
 
-void output(const std::string_view &msg) { std::println("{}", msg); }
+void output(const std::string_view &msg, FILE *const output) {
+  std::println(output, "{}", msg);
+}
 
 void change_title(const std::string_view &msg) {
   std::string output = std::format("{0} {1} v{2}", msg, PROGRAM_NAME, VERSION);

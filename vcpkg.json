@@ -2,10 +2,12 @@
     "dependencies": [
         {
             "name": "ffmpeg",
+            "version>=": "7.1.2#4",
             "features": [
                 "all"
             ],
             "platform": "(windows & x64 & static)"
         }
-    ]
+    ],
+    "builtin-baseline": "55fab67aea1027f7179ae6b5c54a5ba9091c16aa"
 }

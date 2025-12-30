@@ -5,6 +5,14 @@
             "label": "build",
             "type": "shell",
             "command": "cmake",
+            "args": [
+                "--build",
+                "./build",
+                "--config",
+                "Debug",
+                "--target",
+                "all"
+            ],
             "group": {
                 "kind": "build",
                 "isDefault": false
@@ -12,7 +20,7 @@
             "problemMatcher": [
                 "$msCompile"
             ],
-            "detail": "执行 CMake",
+            "detail": "run CMake",
             "presentation": {
                 "reveal": "never", // 关键：不显示终端窗口
                 "panel": "dedicated", // 可选：使用独立的面板（推荐）

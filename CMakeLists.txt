@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 4.1)
+cmake_minimum_required(VERSION 4.2)
 
 # 强制 64 位构建检查
 if(CMAKE_SIZEOF_VOID_P EQUAL 4)
@@ -9,6 +9,7 @@ endif()
 set(VCPKG_TARGET_TRIPLET "x64-windows-static" CACHE STRING "强制使用静态库版本")
 
 # Vcpkg 工具链自动配置
+set(VCPKG_MANIFEST_MODE OFF) # 禁用清单模式，使用全局依赖
 if(NOT CMAKE_TOOLCHAIN_FILE)
     if(DEFINED ENV{VCPKG_ROOT})
         set(vcpkg_toolchain "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
@@ -17,7 +18,7 @@ if(NOT CMAKE_TOOLCHAIN_FILE)
                 CACHE STRING "Vcpkg toolchain file")
             message(STATUS "Using vcpkg from: $ENV{VCPKG_ROOT}")
         else()
-            message(WARNING "Vcpkg toolchain file not found at: ${vcpkg_toolchain}")
+            message(WARNING "vcpkg toolchain file not found at: ${vcpkg_toolchain}")
         endif()
     else()
         message(STATUS "VCPKG_ROOT not set, skipping vcpkg toolchain setup")
@@ -33,9 +34,9 @@ if(NINJA_EXECUTABLE)
 endif()
 
 project(video_match
-    VERSION 1.0
+    VERSION 1.1
     LANGUAGES CXX
-    DESCRIPTION "Video matching application"
+    DESCRIPTION "Video Match"
 )
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -82,7 +83,7 @@ if(MSVC)
         /NODEFAULTLIB:LIBCMT
         /NODEFAULTLIB:LIBCMTD
     )
-    
+
     # 添加静态运行时库
     if(CMAKE_BUILD_TYPE STREQUAL "Debug")
         target_link_libraries(${PROJECT_NAME} PRIVATE
@@ -108,7 +109,7 @@ if(MSVC)
         # /WHOLEARCHIVE  # 确保所有静态库内容被包含
         # /FORCE:MULTIPLE  # 允许重复符号
     )
-    
+
     # 添加静态链接器标志
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /NODEFAULTLIB:LIBCMT")
 endif()
